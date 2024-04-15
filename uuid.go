@@ -27,16 +27,23 @@ func (u UUID) Parse() (sid int32, err error) {
 // ObjectID 使用uuid和物品ID生成全服唯一并且uuid下唯一(每个用户的每个IID唯一)的ObjectID
 func (u UUID) ObjectID(iid int32) (oid ObjectID, err error) {
 	var p, s string
+	var v uint64
 	p, s, err = Split(u.String(), 10)
 	if err != nil {
 		return
 	}
 	var build strings.Builder
-	v, _ := strconv.ParseUint(p, 10, 64)
-	build.WriteString(Pack(uint64(v), BitSize))
+	if v, err = strconv.ParseUint(p, 10, 64); err != nil {
+		return
+	} else {
+		build.WriteString(Pack(v, BitSize))
+	}
 	build.WriteString(Pack(uint64(iid), BitSize))
-	v, _ = strconv.ParseUint(s, 10, 64)
-	build.WriteString(strconv.FormatUint(v, BitSize))
-
-	return ObjectID(build.String()), err
+	if v, err = strconv.ParseUint(s, 10, 64); err != nil {
+		return
+	} else {
+		build.WriteString(Pack(v, BitSize))
+	}
+	oid = ObjectID(build.String())
+	return
 }

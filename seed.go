@@ -98,6 +98,6 @@ func (u *Seed) ObjectID(iid int32) ObjectID {
 	build.WriteString(u.objectPrefix)
 	build.WriteString(Pack(uint64(iid), BitSize))
 	build.WriteString(u.objectSuffix)
-	build.WriteString(strconv.FormatUint(i, BitSize))
+	build.WriteString(Pack(i, BitSize))
 	return ObjectID(build.String())
 }
