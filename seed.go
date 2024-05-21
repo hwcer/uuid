@@ -41,7 +41,7 @@ func New(shard uint16, index uint32) *Seed {
 }
 
 func Create(uuid UUID) (*Seed, error) {
-	
+
 	prefix, suffix, err := Split(uuid.String(), 10)
 	if err != nil {
 		return nil, err
