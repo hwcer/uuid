@@ -6,21 +6,37 @@ import (
 	"strings"
 )
 
-func Pack(id uint64, base int) string {
+func Pack(id uint32, base int) string {
 	arr := make([]string, 2)
-	arr[1] = strconv.FormatUint(uint64(id), base)
+	if id != 0 {
+		arr[1] = strconv.FormatUint(uint64(id), base)
+	}
 	arr[0] = strconv.FormatUint(uint64(len(arr[1])), base)
 	return strings.Join(arr, "")
 }
 
-func Split(s string, base int) (prefix, suffix string, err error) {
-	var i int
-	if i, err = Index(s, base); err != nil {
-		return
+// Split 分割uuid
+// index 取出第几段， 0开始
+func Split(s string, base int, index int) (uint32, string, error) {
+	var v string
+	var p string
+	p = s
+	for i := 0; i <= index; i++ {
+		x, err := Index(p, base)
+		if err != nil {
+			return 0, "", err
+		}
+		v = p[1:x]
+		p = p[x:]
 	}
-	prefix = s[1:i]
-	suffix = s[i:]
-	return
+	if v == "" {
+		return 0, p, nil
+	}
+	if r, err := strconv.ParseUint(v, base, 63); err != nil {
+		return 0, "", err
+	} else {
+		return uint32(r), p, nil
+	}
 }
 
 // Index 获取有效字符串长度

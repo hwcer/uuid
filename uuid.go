@@ -5,45 +5,63 @@ import (
 	"strings"
 )
 
-type UUID uint64
-
-func (u UUID) String() string {
-	return strconv.FormatUint(uint64(u), 10)
+type UUID struct {
+	share  uint16
+	prefix uint32
+	suffix uint32
 }
 
-func (u UUID) Parse() (sid int32, err error) {
-	var v uint64
-	var p string
-	if p, _, err = Split(u.String(), 10); err != nil {
-		return
-	} else if v, err = strconv.ParseUint(p, 10, 64); err != nil {
-		return
-	} else {
-		sid = int32(v)
-	}
-	return
+func (u *UUID) GetShard() uint16 {
+	return u.share
+}
+func (u *UUID) GetPrefix() uint32 {
+	return u.prefix
+}
+func (u *UUID) GetSuffix() uint32 {
+	return u.suffix
 }
 
-// ObjectID 使用uuid和物品ID生成全服唯一并且uuid下唯一(每个用户的每个IID唯一)的ObjectID
-func (u UUID) ObjectID(iid int32) (oid ObjectID, err error) {
-	var p, s string
-	var v uint64
-	p, s, err = Split(u.String(), 10)
-	if err != nil {
-		return
-	}
+// New 通过改变 prefix 生成新UUID
+func (u *UUID) New(prefix uint32) *UUID {
+	n := *u
+	n.prefix = prefix
+	return &n
+}
+
+func (u *UUID) String(base int) string {
 	var build strings.Builder
-	if v, err = strconv.ParseUint(p, 10, 64); err != nil {
-		return
-	} else {
-		build.WriteString(Pack(v, BitSize))
-	}
-	build.WriteString(Pack(uint64(iid), BitSize))
-	if v, err = strconv.ParseUint(s, 10, 64); err != nil {
-		return
-	} else {
-		build.WriteString(Pack(v, BitSize))
-	}
-	oid = ObjectID(build.String())
+	build.WriteString(Pack(uint32(u.share), base))
+	build.WriteString(Pack(u.prefix, base))
+	build.WriteString(Pack(u.suffix, base))
+	return build.String()
+}
+
+// Uint64 转换成UINT64 可能超过math.MaxUint64
+func (u *UUID) Uint64() (r uint64, err error) {
+	s := u.String(10)
+	r, err = strconv.ParseUint(s, 10, 64)
 	return
+}
+
+func (u *UUID) Parse(id string, base int) (err error) {
+	var i uint32
+	suffix := id
+
+	if i, suffix, err = Split(suffix, base, 0); err != nil {
+		return
+	} else {
+		u.share = uint16(i)
+	}
+
+	if i, suffix, err = Split(suffix, base, 0); err != nil {
+		return
+	} else {
+		u.prefix = i
+	}
+	if i, suffix, err = Split(suffix, base, 0); err != nil {
+		return
+	} else {
+		u.suffix = i
+	}
+	return nil
 }
