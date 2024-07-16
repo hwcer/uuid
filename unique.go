@@ -34,3 +34,11 @@ func (u *Unique) New(prefix uint32) string {
 	build.WriteString(Pack(i, u.base))
 	return build.String()
 }
+
+func (u *Unique) Simple() string {
+	i := atomic.AddUint32(&u.index, 1)
+	var build strings.Builder
+	build.WriteString(u.suffix)
+	build.WriteString(Pack(i, u.base))
+	return build.String()
+}
